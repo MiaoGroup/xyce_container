@@ -1,0 +1,49 @@
+# Apptainer Definition File for Xyce 7.10.0 on Fedora
+# Filename: fedora_xyce.def
+
+Bootstrap: docker
+From: docker.xuanyuan.me/library/fedora:latest  # 使用南京大学镜像站的 Fedora 43 作为基础镜像
+
+%help
+    This container provides Xyce 7.10.0 (Serial version) on a Fedora base.
+    To use, run:
+    $ apptainer shell xyce.sif
+    $ xyce --version
+
+%files
+    # 将 RPM 文件从主机复制到容器内的 /opt 目录
+    Install_Xyce_Release7.10.0_Intel64_RHEL8_Serial-gcc_norad.rpm /opt/
+
+%post
+    # %post 部分的命令在容器构建时执行，用于安装和配置软件
+
+    echo "---> Updating Fedora packages..."
+    # dnf update -y
+    sed -e 's|^metalink=|#metalink=|g' \
+    -e 's|^#baseurl=http://download.example/pub/fedora/linux|baseurl=https://mirrors.tuna.tsinghua.edu.cn/fedora|g' \
+    -i.bak \
+    /etc/yum.repos.d/fedora.repo \
+    /etc/yum.repos.d/fedora-updates.repo
+
+    dnf makecache
+
+    dnf update -y
+
+    echo "---> Installing dependencies for Xyce..."
+    # 虽然 RPM 会自动处理大部分依赖，但提前安装一些通用库可以避免潜在问题
+    # RHEL8 的包在 Fedora 上通常兼容，dnf 会解决依赖关系
+    # dnf install -y dnf-plugins-core gcc-gfortran libgfortran
+    dnf install -y python3 python3-pip
+    pip3 install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple numpy scipy
+
+    echo "---> Installing Xyce from RPM..."
+    # 使用 dnf 安装本地 RPM 包，它会自动处理依赖
+    dnf install -y /opt/Install_Xyce_Release7.10.0_Intel64_RHEL8_Serial-gcc_norad.rpm
+
+    echo "---> Cleaning up DNF cache..."
+    dnf clean all
+
+%environment
+    # 设置环境变量，确保系统能找到 Xyce 的可执行文件
+    # 根据 Xyce RPM 的标准安装路径设置
+    export PATH=/usr/local/XyceNF_7.10/bin/:$PATH

@@ -1,0 +1,1 @@
+sudo apptainer build xyce.sif xyce_container.def
