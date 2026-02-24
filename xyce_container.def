@@ -2,7 +2,7 @@
 # Filename: fedora_xyce.def
 
 Bootstrap: docker
-From: docker.xuanyuan.me/library/fedora:latest  # 使用南京大学镜像站的 Fedora 43 作为基础镜像
+From: docker.xuanyuan.me/library/fedora:latest # Or other source
 
 %help
     This container provides Xyce 7.10.0 (Serial version) on a Fedora base.
